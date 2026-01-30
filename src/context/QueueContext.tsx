@@ -17,6 +17,19 @@ import {
   PrescriptionStatus
 } from '@/types/queue';
 import { sortQueueByPriority, generateTrustScore, estimateWaitTime, generateTokenNumber } from '@/lib/priority-engine';
+import { 
+  savePatient, 
+  updatePatient, 
+  getPatients,
+  savePrescription,
+  updatePrescription,
+  getPrescriptions,
+  saveReceipt,
+  updateReceipt,
+  getReceipts,
+  syncAllData
+} from '@/lib/supabase-service';
+import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
 // Action types
@@ -392,29 +405,113 @@ const STORAGE_KEY = 'healthqueue_state_v2';
 export function QueueProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(queueReducer, initialState);
 
-  // Load from localStorage on mount
+  // Load from Supabase on mount, fallback to localStorage
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
+    const loadInitialState = async () => {
       try {
-        const parsed = JSON.parse(saved);
-        // Ensure tokenCounters exist
-        if (!parsed.tokenCounters) {
-          parsed.tokenCounters = initialState.tokenCounters;
+        // Try to load from Supabase
+        const syncedData = await syncAllData();
+        if (syncedData.patients.length > 0 || syncedData.prescriptions.length > 0 || syncedData.receipts.length > 0) {
+          // Count tokens from patients
+          const tokenCounters: Record<Department, number> = {
+            general_medicine: 0,
+            pediatrics: 0,
+            orthopedics: 0,
+            gynecology: 0,
+          };
+          
+          syncedData.patients.forEach(p => {
+            const dept = p.department as Department;
+            const match = p.tokenNumber.match(/\d+/);
+            if (match) {
+              const num = parseInt(match[0], 10);
+              tokenCounters[dept] = Math.max(tokenCounters[dept], num);
+            }
+          });
+          
+          dispatch({
+            type: 'LOAD_STATE',
+            state: {
+              patients: syncedData.patients as Patient[],
+              prescriptions: syncedData.prescriptions as Prescription[],
+              receipts: syncedData.receipts as VisitReceipt[],
+              tokenCounters,
+              isOffline: false,
+              pendingSync: false,
+            },
+          });
+          return;
         }
-        if (!parsed.prescriptions) {
-          parsed.prescriptions = [];
-        }
-        dispatch({ type: 'LOAD_STATE', state: parsed });
       } catch (e) {
-        console.error('Failed to load queue state:', e);
+        console.warn('Failed to load from Supabase, falling back to localStorage:', e);
       }
-    }
+      
+      // Fallback to localStorage
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (!parsed.tokenCounters) {
+            parsed.tokenCounters = initialState.tokenCounters;
+          }
+          if (!parsed.prescriptions) {
+            parsed.prescriptions = [];
+          }
+          dispatch({ type: 'LOAD_STATE', state: parsed });
+        } catch (e) {
+          console.error('Failed to load queue state:', e);
+        }
+      }
+    };
+    
+    loadInitialState();
   }, []);
 
-  // Save to localStorage on state change
+  // Save to localStorage and Supabase on state change
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    
+    // Sync to Supabase in background (non-blocking)
+    const syncToSupabase = async () => {
+      try {
+        // Sync patients
+        for (const patient of state.patients) {
+          const existing = await supabase.from('patients').select('id').eq('id', patient.id).single().catch(() => null);
+          if (existing?.data) {
+            await updatePatient(patient.id, patient);
+          } else {
+            await savePatient(patient);
+          }
+        }
+        
+        // Sync prescriptions
+        for (const prescription of state.prescriptions) {
+          const existing = await supabase.from('prescriptions').select('id').eq('id', prescription.id).single().catch(() => null);
+          if (existing?.data) {
+            await updatePrescription(prescription.id, prescription);
+          } else {
+            await savePrescription(prescription);
+          }
+        }
+        
+        // Sync receipts
+        for (const receipt of state.receipts) {
+          const existing = await supabase.from('receipts').select('id').eq('id', receipt.id).single().catch(() => null);
+          if (existing?.data) {
+            await updateReceipt(receipt.id, receipt);
+          } else {
+            await saveReceipt(receipt);
+          }
+        }
+      } catch (error) {
+        console.warn('Background sync to Supabase failed:', error);
+      }
+    };
+    
+    // Only sync if online
+    if (!state.isOffline && state.pendingSync === false) {
+      syncToSupabase();
+    }
   }, [state]);
 
   // Role-based permissions
