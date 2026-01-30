@@ -1,0 +1,193 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* HealthQueue+ Design System
+   Healthcare-focused, trust-building aesthetic
+   All colors in HSL format
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+@layer base {
+  :root {
+    /* Core backgrounds */
+    --background: 0 0% 98%;
+    --foreground: 220 20% 10%;
+
+    /* Card surfaces */
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 10%;
+
+    /* Popover */
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 10%;
+
+    /* Primary - Healthcare Green */
+    --primary: 160 84% 39%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary - Soft gray-blue */
+    --secondary: 210 20% 96%;
+    --secondary-foreground: 220 20% 20%;
+
+    /* Muted */
+    --muted: 210 15% 94%;
+    --muted-foreground: 220 10% 45%;
+
+    /* Accent - Subtle teal */
+    --accent: 168 76% 94%;
+    --accent-foreground: 160 84% 25%;
+
+    /* Status Colors */
+    --success: 160 84% 39%;
+    --success-foreground: 0 0% 100%;
+    
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --emergency: 0 84% 60%;
+    --emergency-foreground: 0 0% 100%;
+
+    /* Borders & Inputs */
+    --border: 210 20% 90%;
+    --input: 210 20% 90%;
+    --ring: 160 84% 39%;
+
+    --radius: 0.75rem;
+
+    /* Queue Status Colors */
+    --status-waiting: 210 20% 50%;
+    --status-called: 160 84% 39%;
+    --status-consultation: 38 92% 50%;
+    --status-completed: 210 15% 70%;
+
+    /* Sidebar (if needed) */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 220 10% 30%;
+    --sidebar-primary: 160 84% 39%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 168 76% 94%;
+    --sidebar-accent-foreground: 160 84% 25%;
+    --sidebar-border: 210 20% 90%;
+    --sidebar-ring: 160 84% 39%;
+  }
+
+  .dark {
+    --background: 220 20% 8%;
+    --foreground: 210 20% 95%;
+
+    --card: 220 20% 12%;
+    --card-foreground: 210 20% 95%;
+
+    --popover: 220 20% 12%;
+    --popover-foreground: 210 20% 95%;
+
+    --primary: 160 70% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 15% 18%;
+    --secondary-foreground: 210 20% 90%;
+
+    --muted: 220 15% 20%;
+    --muted-foreground: 210 15% 60%;
+
+    --accent: 168 50% 20%;
+    --accent-foreground: 160 70% 70%;
+
+    --success: 160 70% 45%;
+    --success-foreground: 0 0% 100%;
+    
+    --warning: 38 85% 55%;
+    --warning-foreground: 0 0% 100%;
+    
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --emergency: 0 70% 50%;
+    --emergency-foreground: 0 0% 100%;
+
+    --border: 220 15% 20%;
+    --input: 220 15% 20%;
+    --ring: 160 70% 45%;
+
+    --status-waiting: 210 20% 60%;
+    --status-called: 160 70% 50%;
+    --status-consultation: 38 85% 55%;
+    --status-completed: 210 15% 40%;
+
+    --sidebar-background: 220 20% 10%;
+    --sidebar-foreground: 210 20% 90%;
+    --sidebar-primary: 160 70% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 168 50% 18%;
+    --sidebar-accent-foreground: 160 70% 70%;
+    --sidebar-border: 220 15% 18%;
+    --sidebar-ring: 160 70% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+}
+
+@layer components {
+  /* Status badges */
+  .status-waiting {
+    @apply bg-secondary text-secondary-foreground;
+  }
+
+  .status-called {
+    @apply bg-primary text-primary-foreground animate-pulse;
+  }
+
+  .status-consultation {
+    @apply bg-warning text-warning-foreground;
+  }
+
+  .status-emergency {
+    @apply bg-emergency text-emergency-foreground animate-pulse;
+  }
+
+  .status-completed {
+    @apply bg-muted text-muted-foreground opacity-60;
+  }
+
+  /* Card variants */
+  .card-emergency {
+    @apply border-2 border-emergency bg-emergency/5;
+  }
+
+  .card-called {
+    @apply border-2 border-primary bg-primary/5;
+  }
+
+  /* Gradient backgrounds */
+  .gradient-hero {
+    background: linear-gradient(135deg, hsl(160 84% 39% / 0.1) 0%, hsl(168 76% 94%) 100%);
+  }
+
+  .gradient-success {
+    background: linear-gradient(135deg, hsl(160 84% 39%) 0%, hsl(160 70% 50%) 100%);
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
